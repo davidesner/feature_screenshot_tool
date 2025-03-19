@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Feature Screenshot Tool",
+  "version": "1.0",
+  "description": "Take screenshots of webpage regions with highlighting capabilities",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "Take Feature Screenshot",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+} 

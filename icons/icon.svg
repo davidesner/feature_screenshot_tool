@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect x="8" y="8" width="112" height="112" rx="16" fill="#0052CC"/>
+  
+  <!-- Camera lens -->
+  <circle cx="64" cy="64" r="32" fill="#FFFFFF"/>
+  <circle cx="64" cy="64" r="24" fill="#0052CC"/>
+  
+  <!-- Highlight symbol -->
+  <rect x="48" y="48" width="32" height="32" rx="4" 
+        fill="#FFD700" fill-opacity="0.6"
+        transform="rotate(15, 64, 64)"/>
+</svg> 
