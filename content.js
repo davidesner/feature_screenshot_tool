@@ -235,7 +235,7 @@ function initializeScreenshotTool() {
     instructions.textContent = 'Selection area is fixed at 1280x720px';
     instructions.style.cssText = `
       position: fixed;
-      top: 10px;
+      top: calc(-572px + 100vh);
       left: 50%;
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.7);
@@ -243,6 +243,7 @@ function initializeScreenshotTool() {
       padding: 8px 12px;
       border-radius: 4px;
       z-index: 1000000;
+      white-space: nowrap;
     `;
     overlay.appendChild(instructions);
 
