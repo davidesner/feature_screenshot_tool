@@ -30,6 +30,8 @@ A Chrome extension for capturing screenshots with fixed dimensions (1280x720px) 
    - Click outside the selection area to capture the screenshot
 4. The screenshot will be automatically downloaded as 'feature-screenshot.png'
 
+![Feature Demo](./docs/feature_screen_tool.gif)
+
 ## Requirements
 
 - Chrome browser
