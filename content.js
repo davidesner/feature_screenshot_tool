@@ -352,83 +352,104 @@ function initializeScreenshotTool() {
   // Capture the screenshot
   async function captureScreenshot() {
     console.log('Capturing screenshot');
-    // Calculate the dimensions
-    const width = Math.abs(endX - startX);
-    const height = Math.abs(endY - startY);
+    
+    // Hide scrollbars before capture
+    document.documentElement.classList.add('hide-scrollbars');
+    document.body.classList.add('hide-scrollbars');
     
     try {
-      // Send message to background script to capture the tab
-      const dataUrl = await chrome.runtime.sendMessage({
-        type: 'captureVisibleTab'
+      // Get the selection box position
+      const box = selectionBox.getBoundingClientRect();
+      
+      // Capture the screenshot
+      const message = {
+        type: 'captureVisibleTab',
+        area: {
+          x: Math.round(box.left),
+          y: Math.round(box.top),
+          width: Math.round(box.width),
+          height: Math.round(box.height)
+        }
+      };
+      
+      // Send message to background script
+      chrome.runtime.sendMessage(message, response => {
+        if (!response) {
+          console.error('Failed to capture screenshot - no response');
+          return;
+        }
+        console.log('Screenshot captured:', response);
+        
+        // Process the screenshot
+        processScreenshot(response, box);
+        
+        // Show scrollbars after capture
+        document.documentElement.classList.remove('hide-scrollbars');
+        document.body.classList.remove('hide-scrollbars');
+        
+        // Clean up
+        cleanup();
       });
+    } catch (error) {
+      console.error('Error capturing screenshot:', error);
       
-      if (!dataUrl) {
-        throw new Error('Failed to capture screenshot');
-      }
+      // Make sure to show scrollbars even if there's an error
+      document.documentElement.classList.remove('hide-scrollbars');
+      document.body.classList.remove('hide-scrollbars');
       
-      // Create canvas for processing
+      cleanup();
+    }
+  }
+
+  // Process and download the screenshot
+  function processScreenshot(dataUrl, box) {
+    const img = new Image();
+    img.onload = () => {
+      // Create canvas for the final image
       const canvas = document.createElement('canvas');
       canvas.width = 1280;
       canvas.height = 720;
       const ctx = canvas.getContext('2d');
-      
-      // Load the screenshot
-      const img = new Image();
-      img.onload = () => {
-        // Create temporary canvas for the selected area
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = width;
-        tempCanvas.height = height;
-        const tempCtx = tempCanvas.getContext('2d');
+
+      // Draw the screenshot portion
+      ctx.drawImage(img, 
+        box.x, box.y, box.width, box.height,  // Source rectangle
+        0, 0, 1280, 720                       // Destination rectangle
+      );
+
+      // If there's a highlight box, add the semi-transparent overlay
+      if (highlightBox) {
+        const highlightRect = highlightBox.getBoundingClientRect();
+        const scaleX = 1280 / box.width;
+        const scaleY = 720 / box.height;
+
+        // Calculate highlight position relative to the selection box
+        const highlightX = (highlightRect.x - box.x) * scaleX;
+        const highlightY = (highlightRect.y - box.y) * scaleY;
+        const highlightWidth = highlightRect.width * scaleX;
+        const highlightHeight = highlightRect.height * scaleY;
+
+        // Add semi-transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         
-        // Draw the selected area
-        tempCtx.drawImage(img, 
-          Math.min(startX, endX), Math.min(startY, startY),
-          width, height,
-          0, 0, width, height
-        );
-        
-        // Scale to 1280x720
-        ctx.drawImage(tempCanvas, 0, 0, 1280, 720);
-        
-        // Add semi-transparent overlay everywhere except the highlighted area
-        if (highlightBox) {
-          const highlightLeft = Math.min(highlightStartX, highlightEndX) - Math.min(startX, endX);
-          const highlightTop = Math.min(highlightStartY, highlightEndY) - Math.min(startY, startY);
-          const highlightWidth = Math.abs(highlightEndX - highlightStartX);
-          const highlightHeight = Math.abs(highlightEndY - highlightStartY);
-          
-          // Create semi-transparent overlay
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-          
-          // Fill top area
-          ctx.fillRect(0, 0, 1280, (highlightTop / height) * 720);
-          // Fill bottom area
-          ctx.fillRect(0, ((highlightTop + highlightHeight) / height) * 720, 1280, 720);
-          // Fill left area
-          ctx.fillRect(0, (highlightTop / height) * 720, (highlightLeft / width) * 1280, highlightHeight / height * 720);
-          // Fill right area
-          ctx.fillRect(((highlightLeft + highlightWidth) / width) * 1280, (highlightTop / height) * 720, 1280, highlightHeight / height * 720);
-        }
-        
-        // Download the image
-        canvas.toBlob(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'feature-screenshot.png';
-          a.click();
-          URL.revokeObjectURL(url);
-          
-          // Clean up after successful capture
-          cleanup();
-        });
-      };
-      img.src = dataUrl;
-    } catch (error) {
-      console.error('Failed to capture screenshot:', error);
-      cleanup();
-    }
+        // Fill the areas around the highlight
+        ctx.fillRect(0, 0, 1280, highlightY); // Top
+        ctx.fillRect(0, highlightY + highlightHeight, 1280, 720 - (highlightY + highlightHeight)); // Bottom
+        ctx.fillRect(0, highlightY, highlightX, highlightHeight); // Left
+        ctx.fillRect(highlightX + highlightWidth, highlightY, 1280 - (highlightX + highlightWidth), highlightHeight); // Right
+      }
+
+      // Download the image
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'feature-screenshot.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    };
+    img.src = dataUrl;
   }
 
   // Clean up the overlay and selection boxes

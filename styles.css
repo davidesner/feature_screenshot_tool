@@ -38,4 +38,15 @@
   border: 2px solid #FFD700;
   pointer-events: none;
   z-index: 1000001;
+}
+
+/* Hide scrollbars during screenshot */
+.hide-scrollbars {
+  overflow: hidden !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.hide-scrollbars::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
 } 
